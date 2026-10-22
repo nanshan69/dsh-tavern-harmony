@@ -1,0 +1,5 @@
+# 只插入一个空行，用于让 client export 进入 client-modules 的扫描表。
+# 行 id 与包名保持一致：client-modules 用行/包名去匹配 bundle 里注册的 id。
+- insert:
+    - id: dsh-tavern-plugin
+      name: dsh-tavern-plugin

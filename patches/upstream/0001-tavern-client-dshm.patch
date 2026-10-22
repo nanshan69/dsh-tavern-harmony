@@ -1,0 +1,53 @@
+--- a/tavern-plugin/lib/client.js
++++ b/dsh-tavern-plugin/client.js
+@@ -121,6 +121,19 @@
+ 	factory: (require) => {
+ 		var module = { exports: {} };
+ 		var exports = module.exports;
++		var __gateOn = false;
++		try {
++			var __xhr = new XMLHttpRequest();
++			__xhr.open('GET', '/api/tavern-gate/status', false);
++			__xhr.send();
++			var __st = JSON.parse(__xhr.responseText);
++			__gateOn = !!(__st && __st.loaded === true);
++		} catch (__e) { __gateOn = false; }
++		if (!__gateOn) {
++			exports.apply = function () {};
++			exports.inject = [];
++			return module.exports;
++		}
+ 			Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+ 			let React = require("react");
+ 			let DshUi = require("@deepseek-ai/dsh-client-ui-primitives");
+@@ -21501,7 +21514,8 @@
+ 			let lastError = null;
+ 			for (let attempt = 0; attempt < 3; attempt += 1) {
+ 				const controller = new AbortController();
+-				const timer = window.setTimeout(function () { controller.abort(); }, 2000);
++				// 端侧 submitTask 在后台结算/写锁繁忙时经常超过 2 秒；放宽到 15 秒，避免客户端误判超时后重试三次仍失败。
++				const timer = window.setTimeout(function () { controller.abort(); }, 15000);
+ 				try {
+ 					const result = await rpc("submitTask", { kind: "candidate", requestId: requestId, messageId: messageId, guidance: guidance || "" }, sessionId, { signal: controller.signal });
+ 					const view = coordinationView(result, sessionId);
+@@ -23331,6 +23345,7 @@
+             ctx.effect(() => ctx.betterSidebar.registerTab({ id: "dsh-tavern:regex-library", title: "正则库", order: 9, single: true, component: RegexLibraryTab }), "dsh-tavern: regex library");
+ 			ctx.effect(() => ctx.betterSidebar.registerTab({ id: "dsh-tavern:skills", title: "Skill 库", order: 8, single: true, component: props => React.createElement(TavernSkillsTab, { sessionId: props.scope.sessionId }) }), "dsh-tavern: Skill library");
+             ctx.effect(() => ctx.betterSidebar.registerTab({ id: "dsh-tavern:card-memory", title: "改卡记忆", order: 9, single: true, component: props => React.createElement(TavernCardMemoryTab, { sessionId: props.scope.sessionId }) }), "dsh-tavern: card memory");
++			ctx.effect(() => ctx.betterSidebar.registerTab({ id: "dsh-tavern:image-settings", title: "场景生图", order: 9, single: true, component: function () { return React.createElement("div", { style: { height: "100%", minHeight: 0, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", background: "var(--dsw-alias-bg-base, #f7f5f2)", color: "var(--dsw-alias-label-primary, #eceff4)", padding: "12px 14px 20px", borderRadius: "10px" } }, React.createElement("div", { className: "dsh-tavern-settings-section dsh-tavern-global-settings" }, React.createElement(SceneImageSettings, null))); } }), "dsh-tavern: image settings tab");
+ 			worldBookLibraryFeature.register({ ctx: ctx, appendMention: appendMention });
+ 			ctx.effect(function () {
+ 				return worldBookSwitcherFeature.register({
+@@ -23517,7 +23532,11 @@
+ 				void Promise.resolve().then(function () { return rpc("confirmSessionPatch", { protocol: 1, installed: false, reason: "客户端会话历史模块没有可安装的读取方法" }); }).catch(function () {})
+ 				return
+ 			}
+-			if (proto.__dshTavernSessionPatch) return
++			if (proto.__dshTavernSessionPatch) {
++				// 门在开机时已经装过只读兼容补丁；这里补发握手，避免编辑/回退被判未就绪。
++				void Promise.resolve().then(function () { return rpc("confirmSessionPatch", { protocol: 1, installed: true }) }).catch(function () {})
++				return
++			}
+ 			const originalRead = proto.readPage
+ 			const originalFollow = proto.follow
+ 			let patched = null

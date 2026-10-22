@@ -1,0 +1,127 @@
+# 安装时由 scripts/install.py 渲染：{{CORE_DIR}} → 核心目录，{{PROFILE_DIR}} → profile 目录。
+# 不要直接手改这个模板里的占位符之外的路径。
+# 酒馆的两个 agent preset（tavern / tavern-background）。
+# 从 tavern 仓库的 plugin.patch.yml 转写：所有依赖用【核心目录绝对路径】，
+# 保证和宿主加载的是同一份模块实例。preset 在会话用到时才挂载，启动时只登记描述。
+- insert:
+    - id: preset-tavern
+      name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-agent-preset/lib/index.js
+      config:
+        id: tavern
+        name: 酒馆模式
+        description: 基于 DSH 极简会话的人物卡文字游戏，复用原生输入、模型、重试、历史与上下文管理。
+        order: 10
+        plugins:
+          # Tavern preset：最终系统提示词由插件按游玩／卡片会话装配。
+          - id: persona
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-persona/lib/index.js
+            config:
+              # 0.2.0-rc.2 适配：`text` 键已移除（0.1.2 遗留，静默失效）；
+              # `prefix` 变为必填，空串仍是合法的「空 persona」。
+              prefix: ''
+              suffix: ''
+              includeRuntimeContext: false
+
+          # 卡片工作台需要可写的跨平台原语；0.2.0 把它们放在 preset plane，
+          # 而不是在 host plane 重新启用。
+          - id: tool-bash
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-tool-bash/lib/index.js
+            disabled: !!js process.platform === 'win32'
+          - id: tool-pwsh
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-tool-pwsh/lib/index.js
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-fs
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-tool-fs/lib/index.js
+          - id: tool-web
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-tool-web/lib/index.js
+            config:
+              search: true
+              fetch: false
+
+          # Skill 来源由 Tavern 按 Agent 用途分配，调用仍使用原生工具。
+          - id: tool-skill
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-tool-skill/lib/index.js
+
+          # 卡片工作台保留 Tavern 的私有 Skill 来源，同时复用 DSH 创造模式工具。
+          # 选择整套官方 cordis preset 会丢失本 preset 的 Skill 目录。
+          - id: tool-cordis
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-tool-cordis/lib/index.js
+
+          # 用户代码与清单都在持久数据目录；更新只保留这个加载入口。
+          - id: user-tools
+            name: {{PROFILE_DIR}}/node_modules/dsh-tavern-host/lib/user-tools-bridge.js
+
+          # 复用 DSH 原生上下文压缩能力，并恢复 /compact 命令。
+          # 压缩器与工具结果裁剪器共享同一隔离域，保持与 DSH 标准模式一致。
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-compaction-basic/lib/index.js
+                config:
+                  thresholdRatio: 0.5
+
+              - id: tavern-compaction
+                name: {{PROFILE_DIR}}/node_modules/dsh-tavern-host/lib/agent-compaction.js
+
+              - id: command-compact
+                name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-command-compact/lib/index.js
+
+              - id: tool-result-pruner
+                name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-compaction-tool-result-pruner/lib/index.js
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
+
+    - id: preset-tavern-background
+      name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-agent-preset/lib/index.js
+      config:
+        id: tavern-background
+        order: 11
+        plugins:
+          # Tavern 后台 Agent 的最小 DSH 预设。
+          # 提供压缩与 Tavern Skill 按需加载，不继承前台正文提示词、其他工具或正则。
+          - id: tool-skill
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-tool-skill/lib/index.js
+
+          # 联网搜索：dsh-web-app 把 host plane 的 tool-web 关掉、改由每个 preset
+          # 自己声明（见 dsh-web-app/presets/standard.patch.yml）。后台结算/世界书过滤的
+          # childCtx.tools.restrict({allow:['…','web_search']}) 只认已注册的全局工具，
+          # 缺这一行时 0.2.0 的 restrict 直接抛
+          # `tools.restrict() names unknown global tool "web_search"`，整个后台任务失败，
+          # MVU 变量结算因此不执行。与前台保持一致的 search:true / fetch:false。
+          - id: tool-web
+            name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-tool-web/lib/index.js
+            config:
+              search: true
+              fetch: false
+
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-compaction-basic/lib/index.js
+                config:
+                  thresholdRatio: 0.5
+
+              - id: tavern-compaction
+                name: {{PROFILE_DIR}}/node_modules/dsh-tavern-host/lib/agent-compaction.js
+
+              - id: command-compact
+                name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-command-compact/lib/index.js
+
+              - id: tool-result-pruner
+                name: {{CORE_DIR}}/node_modules/@deepseek-ai/dsh-compaction-tool-result-pruner/lib/index.js
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024

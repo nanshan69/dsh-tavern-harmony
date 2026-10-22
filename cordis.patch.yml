@@ -1,0 +1,11 @@
+# 仓库根 = 一个「可安装包」的 bundle 层。
+#
+# DSHM 的插件安装器（设置 → 插件 里贴 github.com/owner/repo）读到
+# package.json 的 dsh.bundle.patch，会把下面这条登记进 profile 的启动层。
+#
+# 这条是自举入口：首次启动把仓库里 vendored 的 5 个包铺到 node_modules、
+# 把 bundles 改成 6 条正常行，然后把自己从 bundles 里移除。
+# 之后重启就按普通安装加载（gate / sidebar / skin / plugin / remote / presets）。
+- insert:
+    - id: tavern-harmony-bootstrap
+      name: dsh-tavern-harmony

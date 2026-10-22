@@ -1,0 +1,65 @@
+{
+  "name": "dsh-tavern-harmony",
+  "version": "1.1.0",
+  "description": "DSH Tavern 的鸿蒙（DSHM）移植：贴 GitHub 链接即可安装，默认关闭、可随时开关",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": []
+    },
+    "harmony": {
+      "upstream": "https://github.com/flizzywine/dsh-tavern",
+      "upstreamVersion": "3.0.1",
+      "upstreamRevision": "c7d4a118ca8cc0f57917bd054de35b950184381a",
+      "target": "DSHM 0.2.1-rc.2 / Node 24 (jitless) / ArkWeb",
+      "bootstrap": true
+    }
+  },
+  "dependencies": {
+    "@jsquash/jpeg": "1.6.0",
+    "@jsquash/png": "3.1.1",
+    "@jsquash/webp": "1.5.0",
+    "acorn": "8.15.0",
+    "chevrotain": "^11.2.0",
+    "dsh-better-sidebar": "0.28.0",
+    "jsdom": "26.1.0",
+    "marked": "16.3.0",
+    "mathjs": "12.4.3",
+    "ws": "8.21.3",
+    "yaml": "2.9.0",
+    "zod": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "dshm",
+    "openharmony",
+    "harmonyos",
+    "tavern",
+    "roleplay",
+    "sillytavern"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nanshan69/dsh-tavern-harmony.git"
+  },
+  "scripts": {
+    "doctor": "python3 scripts/doctor.py",
+    "install:device": "python3 scripts/install.py --apply",
+    "uninstall:device": "python3 scripts/uninstall.py --apply"
+  }
+}

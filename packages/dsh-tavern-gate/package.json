@@ -1,0 +1,46 @@
+{
+  "name": "dsh-tavern-gate",
+  "version": "1.0.0",
+  "description": "DSH Tavern 的开关：默认关闭，运行时加载/卸载酒馆本体（鸿蒙 DSHM 移植）",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./tavern-host-entry": "./tavern-host-entry.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": []
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "tavern-host-entry.js",
+    "cordis.patch.yml",
+    "package.json",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "dshm",
+    "openharmony",
+    "tavern"
+  ],
+  "license": "AGPL-3.0-or-later",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nanshan69/dsh-tavern-harmony.git",
+    "directory": "packages/dsh-tavern-gate"
+  }
+}

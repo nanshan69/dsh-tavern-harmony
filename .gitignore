@@ -1,0 +1,23 @@
+# 依赖：按需在设备/电脑上装，不进仓库
+node_modules/
+.pnpm-store/
+
+# 构建/备份产物
+*.bak
+*.bak-*
+*.tar.gz
+*.zip
+dist/
+_tavern-harmony-backup/
+
+# 运行时日志
+*.log
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+.virtfs_metadata/

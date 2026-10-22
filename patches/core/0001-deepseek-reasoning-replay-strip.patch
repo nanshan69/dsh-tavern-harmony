@@ -1,0 +1,73 @@
+--- a/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
+@@ -1545,21 +1545,27 @@
+ 		value = JSON.parse(raw);
+ 	} catch (_invalidToolHistoryJson) {
+ 		return {};
+ 	}
+ 	return typeof value === "object" && value !== null && !Array.isArray(value) ? value : {};
+ }
+-function assistant(message, model, onReplayDegrade) {
++function assistant(message, model, onReplayDegrade, stripReasoning = false) {
+ 	const replay = readReplay(message, model, onReplayDegrade);
++	// 酒馆会话优化：纯正文回合不回放历史思维链，减少上下文膨胀与首字延迟。
++	// 只在识别为酒馆会话时生效；普通会话行为不变。
++	// 带 tool-call 的消息仍保留 thinking（Anthropic 协议要求 tool_use 相邻的
++	// thinking 块带签名，否则会 INVALID_REPLAY_STATE）。
++	const hasToolCall = Array.isArray(message.content) && message.content.some(block => block.type === "tool-call");
++	const strip = stripReasoning && !hasToolCall;
+ 	return message.content.flatMap((block, index) => {
+ 		switch (block.type) {
+ 			case "text": return block.text.length === 0 ? [] : {
+ 				type: "text",
+ 				text: block.text
+ 			};
+-			case "reasoning": return {
++			case "reasoning": return strip ? [] : {
+ 				type: "thinking",
+ 				thinking: block.text,
+ 				...replay?.[index]?.signature === void 0 ? {} : { signature: replay[index].signature }
+ 			};
+ 			case "tool-call": return {
+ 				type: "tool_use",
+@@ -1585,12 +1591,25 @@
+ * @param access - execution-world paths for image descriptions.
+ * @param onReplayDegrade - diagnostic for discarded native replay metadata.
+ * @param fileIds - resolved Files references; omission selects inline image bytes.
+ * @returns the Messages API JSON body.
+ */
+ function serialize(options, connection, history, images, access, onReplayDegrade, fileIds) {
++	// 仅对酒馆会话启用“丢弃历史思维链”。识别依据是酒馆装配的系统提示词特征，
++	// 普通 DSH 会话不匹配，行为保持原样。
++	const isTavernConversation = (() => {
++		const parts = [typeof options.system === "string" ? options.system : ""];
++		for (const message of history) {
++			if (message.role !== "system") continue;
++			if (Array.isArray(message.content)) {
++				for (const block of message.content) if (block.type === "text") parts.push(block.text);
++			} else if (typeof message.content === "string") parts.push(message.content);
++		}
++		return /【常驻世界书】|tavern-system-head|小说续写引擎/.test(parts.join("\n"));
++	})();
++	if (isTavernConversation) console.log("[deepseek-replay] tavern conversation: history reasoning will be stripped");
+ 	const model = connection.models.find((entry) => entry.id === options.model);
+ 	const inHistory = model?.systemPromptUpdate === "in-history";
+ 	const input = (blocks) => blocks.flatMap((block) => {
+ 		if (block.type === "text") return block.text ? [{
+ 			type: "text",
+ 			text: block.text
+@@ -1672,13 +1691,13 @@
+ 						text
+ 					}]
+ 				});
+ 			} else historySystem = text;
+ 			continue;
+ 		}
+-		const content = message.role === "assistant" ? assistant(message, options.model, onReplayDegrade) : message.role === "tool" ? [{
++		const content = message.role === "assistant" ? assistant(message, options.model, onReplayDegrade, isTavernConversation) : message.role === "tool" ? [{
+ 			type: "tool_result",
+ 			tool_use_id: message.toolCallId,
+ 			content: input(message.content),
+ 			...message.isError === void 0 ? {} : { is_error: message.isError }
+ 		}] : message.content.flatMap((block) => input([block]));
+ 		if ((message.role === "user" || message.role === "assistant") && content.length === 0) continue;

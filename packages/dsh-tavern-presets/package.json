@@ -1,0 +1,29 @@
+{
+  "name": "dsh-tavern-presets",
+  "version": "3.0.0-dshm.1",
+  "description": "酒馆的两个 agent preset（tavern / tavern-background）；cordis.patch.yml 在安装时按设备路径渲染",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml.tmpl",
+    "package.json",
+    "README.md"
+  ],
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nanshan69/dsh-tavern-harmony.git",
+    "directory": "packages/dsh-tavern-presets"
+  }
+}
