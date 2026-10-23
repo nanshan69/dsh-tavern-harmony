@@ -1,5 +1,25 @@
 # 更新日志
 
+## 1.1.2 — 2026-10-23
+
+**修好「重新生成正文要等一分钟、最后还报错」**：显示同步（`synchronize`）在端侧
+从来没跑成功过 —— 模板引擎用 `await WebAssembly.instantiate(...)` 加载 xxhash，
+而 jitless 环境把 WebAssembly 打成了**永不落定**的桩，于是每次同步都停在第一个
+`await`，撑满 90 秒超时、把唯一的模板线程占死，前台回合只能排在它后面干等。
+
+- `server-artifact/engine.js`：哈希初始化加 300ms 超时 + 纯 JS 128 位哈希兜底，
+  兜底结果缓存在 `globalThis`，之后零等待。首次同步实测 2.7 秒完成（此前永远超时）。
+- `server-template-runtime.js`：前台模板调用（`request`/`input`/`worldbook`/…）
+  不再看 `transient` 标记，直接抢占正在跑的显示同步；排队中的显示同步在前台
+  等待时让位。前台任务不再被 90 秒的后台卡顿拖住。
+- `server-template-sync.js`：显示同步的失败次数不再跨轮累积，聊天一有新版本
+  就重置重试预算，避免连着重生成几次后卡片渲染永久停摆。
+- `server-template-worker.js`：注释订正（WebAssembly 桩继续保持“永不落定”，
+  改成 reject 反而可能触发未处理拒绝打挂 worker 线程）。
+
+效果：日志里首次出现 `invoke done synchronize`，消息模板/卡片渲染开始生效；
+「重新生成正文」不再先等一分钟。
+
 ## 1.1.1 — 2026-10-22
 
 - 修复侧栏半透明：dream-skin 壁纸模式会把 `--dsw-alias-bg-base` 压成 0.45 透明，

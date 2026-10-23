@@ -32,12 +32,11 @@ async function initialize(sessionId, readOnly = false) {
   })
   L('init: jsdom constructed')
   const w = dom.window
-  // 端侧 jitless：全局没有 WebAssembly。模板引擎只用它加载 xxhash-wasm 做缓存哈希，
-  // 加载失败本就有纯 JS 兜底；这里给一个“总是失败”的桩，让它走 catch 分支，
-  // 而不是抛 ReferenceError 把 worker 线程打挂。
+  // 端侧 jitless：jsdom 窗口里没有 WebAssembly。引擎只拿它加载 xxhash-wasm 做显示缓存哈希。
+  // 这里**故意**返回永不落定的 Promise（不会产生 unhandled rejection 把 worker 线程打挂）；
+  // 显示同步那一侧的 await 在 engine.js 里加了 300ms 超时 + 纯 JS 哈希兜底，
+  // 所以不会再出现"每条同步都卡满 90 秒"。
   if (typeof w.WebAssembly === 'undefined') {
-    // 返回“永挂起”的 Promise：引擎的 await 停在原地，xxhash 保持 null，
-    // 它自带的纯 JS 哈希兜底会被使用；不产生 rejection，避免 unhandled 打挂线程。
     const unavailable = () => new Promise(() => {})
     w.WebAssembly = { instantiate: unavailable, compile: unavailable, validate: () => false }
   }

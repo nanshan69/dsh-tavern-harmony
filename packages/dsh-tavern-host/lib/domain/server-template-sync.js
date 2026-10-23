@@ -13,7 +13,10 @@ export function createServerTemplateSync({ run, onError, delayMs = 250, maxRetry
     if (record && record.version === version && record.blocked === blocked) return
     if (!record) { record = {}; records.set(id, record) }
     else clearTimeout(record.timer)
+    const versionChanged = record.version !== version
     Object.assign(record, { version, blocked, dirty: true, timer: null, retryDelay: delayMs })
+    // 端侧显示同步会被前台请求抢占，失败次数不该跨轮累积：聊天一有新版本就重新给满重试。
+    if (versionChanged) record.attempts = 0
     arm(id, record)
   }
   function arm(id, record) {

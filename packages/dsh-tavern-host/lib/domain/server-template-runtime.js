@@ -6,6 +6,12 @@ import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { redactMvuLoadError } from './mvu-diagnostics.js'
 const TEMPLATE_WORKER_THREAD = new URL('./server-template-worker-thread.mjs', import.meta.url)
+// 端侧：显示同步（synchronize）在手机上经常整段卡住，会把唯一的模板线程占满 90 秒，
+// 前台回合的提示词渲染排在它后面，表现就是"点重新生成要等一分钟"。
+// 这里把前台要用的模板调用单独标出来，让它们能直接抢走线程。
+const DISPLAY_SYNC_OPERATION = 'synchronize'
+const FOREGROUND_OPERATIONS = new Set(['connect', 'initialize', 'input', 'request', 'render', 'worldbook', 'messages', 'command'])
+const PREEMPT_DISPLAY_SYNC_AFTER_MS = 2500
 
 const rpcMethods = new Set(['getFullPromptTemplateState', 'saveFullPromptTemplateState',
   'saveFullPromptTemplateSettings', 'saveFullPromptTemplateGlobals', 'countFullTemplateTokens',
@@ -21,6 +27,8 @@ export function createServerTemplateRuntime({ rpc, store, timeoutMs = 180000, //
   if (!Number.isInteger(heapMb) || heapMb < 128 || heapMb > 4096) throw new RangeError('DSH_TAVERN_TEMPLATE_HEAP_MB 必须是 128 到 4096 之间的整数（MB）')
   const sessions = new Map(), tails = new Map(), generations = new Map(), jobs = new Map()
   const queueKind = new Map()
+  // 每个会话还有多少个前台模板调用在等线程；排队中的显示同步看见它就放弃。
+  const foregroundWaiting = new Map()
   const capacityWaiters = new Set()
   const wakeCapacity = () => { for (const wake of capacityWaiters) wake() }
   let disposed = false
@@ -224,6 +232,17 @@ export function createServerTemplateRuntime({ rpc, store, timeoutMs = 180000, //
     // 前台请求（回合的提示词渲染）优先：后台显示同步经常在端侧跑几分钟，
     // 如果让它占着会话队列，用户就要等很久才看到模型开始生成。
     // 做法：前台任务到来时直接停掉正在跑的后台任务，用新 worker 立即服务前台。
+    const foreground = !transient || FOREGROUND_OPERATIONS.has(operation)
+    if (foreground) {
+      const running = sessions.get(sessionId)
+      const runningFor = running !== undefined && running.currentStartedAt !== undefined ? Date.now() - running.currentStartedAt : 0
+      // 显示同步只画消息外观，丢掉可以按退避重排，所以前台一等就让它让位，
+      // 不用等满 90 秒超时——那 90 秒里前台什么都干不了。
+      if (running !== undefined && running.closed !== true && running.currentOperation === DISPLAY_SYNC_OPERATION && runningFor > PREEMPT_DISPLAY_SYNC_AFTER_MS) {
+        console.log('[dsh-tavern-template] preempt display sync (' + runningFor + 'ms) for foreground ' + operation)
+        stop(running, new Error('显示同步让位前台请求（稍后重试）'))
+      }
+    }
     if (!transient) {
       const running = sessions.get(sessionId)
       const runningFor = running !== undefined && running.currentStartedAt !== undefined ? Date.now() - running.currentStartedAt : 0
@@ -238,9 +257,22 @@ export function createServerTemplateRuntime({ rpc, store, timeoutMs = 180000, //
     // Match the former JSON transport: host-only callbacks (notably random)
     // stay in the caller; randomSeed/randomRef carry deterministic evaluation.
     input = JSON.parse(JSON.stringify(input))
+    if (foreground) foregroundWaiting.set(sessionId, (foregroundWaiting.get(sessionId) || 0) + 1)
     const generation = generations.get(sessionId)
+    const releaseForeground = () => {
+      if (!foreground) return
+      const left = (foregroundWaiting.get(sessionId) || 0) - 1
+      if (left > 0) foregroundWaiting.set(sessionId, left)
+      else foregroundWaiting.delete(sessionId)
+    }
     const pending = (tails.get(sessionId) || Promise.resolve()).catch(() => {}).then(async () => {
       if (disposed || generation !== generations.get(sessionId)) throw new Error('提示词模板任务已取消')
+      // 前台还在等线程时，排在前面的显示同步直接放弃（调度方会按退避重排），
+      // 否则它一跑又是 90 秒，前台等于没抢到。
+      if (operation === DISPLAY_SYNC_OPERATION && (foregroundWaiting.get(sessionId) || 0) > 0) {
+        console.log('[dsh-tavern-template] skip queued display sync while foreground waits')
+        throw new Error('提示词模板任务已取消')
+      }
       const job = { id: randomUUID(), operation, phase: 'executing', createdAt: Date.now(), transient }
       jobs.set(sessionId, job)
       let record
@@ -276,7 +308,10 @@ export function createServerTemplateRuntime({ rpc, store, timeoutMs = 180000, //
       }
     })
     tails.set(sessionId, pending)
-    try { return await pending } finally { if (tails.get(sessionId) === pending) { tails.delete(sessionId); queueKind.delete(sessionId) } }
+    try { return await pending } finally {
+      releaseForeground()
+      if (tails.get(sessionId) === pending) { tails.delete(sessionId); queueKind.delete(sessionId) }
+    }
   }
   return {
     forSession: sessionId => ({

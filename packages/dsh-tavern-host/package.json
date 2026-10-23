@@ -1,6 +1,6 @@
 {
   "name": "dsh-tavern-host",
-  "version": "3.0.1-dshm.1",
+  "version": "3.0.1-dshm.2",
   "description": "DSH Tavern 的 host 半边（鸿蒙 / DSHM 移植版：worker_threads 模板引擎、默认关闭、运行时加载）",
   "type": "module",
   "main": "./index.js",
@@ -29,11 +29,21 @@
     "@deepseek-ai/dsh-typert-protocol": ">=0.2.0-rc.1 <0.3.0"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-agent": { "optional": true },
-    "@deepseek-ai/dsh-skill-filesystem": { "optional": true },
-    "@deepseek-ai/dsh-subagent": { "optional": true },
-    "@deepseek-ai/dsh-tools": { "optional": true },
-    "@deepseek-ai/dsh-typert-protocol": { "optional": true }
+    "@deepseek-ai/dsh-agent": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-skill-filesystem": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-subagent": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-typert-protocol": {
+      "optional": true
+    }
   },
   "keywords": [
     "dsh",
