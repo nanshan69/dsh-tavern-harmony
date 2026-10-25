@@ -16,6 +16,7 @@ import { existsSync, mkdirSync, cpSync, readFileSync, writeFileSync, symlinkSync
          readdirSync, appendFileSync, copyFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { join, resolve } from 'node:path'
+import { syncBundledSkills } from './packages/dsh-tavern-gate/skills-sync.js'
 
 export const name = 'tavern-harmony-bootstrap'
 // 只依赖 webServer：门自己会等它需要的服务。
@@ -135,8 +136,30 @@ async function loadGate(ctx) {
   }
 }
 
+
+/** 首次安装（以及重新贴链接）时把仓库 skills/ 铺到 <home>/skills。 */
+function syncSkillsFromPackage() {
+  try {
+    const source = join(PKG_ROOT, 'skills')
+    if (!existsSync(source)) { log('skills: 仓库里没有 skills/，跳过'); return }
+    const report = syncBundledSkills({
+      source,
+      target: join(HOME_DIR, 'skills'),
+      backupRoot: join(HOME_DIR, 'skills-backup'),
+      preserve: ['ohos-'],
+    })
+    log('skills: ' + JSON.stringify(report))
+    if (report.copied > 0 || report.backed > 0) {
+      console.log('[tavern-harmony] 已同步内置技能：' + JSON.stringify(report))
+    }
+  } catch (error) {
+    log('SKILLS SYNC FAILED: ' + String(error && error.stack || error))
+  }
+}
+
 export async function apply(ctx) {
   try {
+    syncSkillsFromPackage()
     const profilePackage = join(PROFILE_DIR, 'package.json')
     if (!existsSync(profilePackage)) {
       console.warn('[tavern-harmony] 找不到 profile package.json：' + profilePackage)

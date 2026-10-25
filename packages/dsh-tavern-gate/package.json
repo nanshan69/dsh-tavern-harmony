@@ -1,6 +1,6 @@
 {
   "name": "dsh-tavern-gate",
-  "version": "1.0.0",
+  "version": "0.1.2",
   "description": "DSH Tavern 的开关：默认关闭，运行时加载/卸载酒馆本体（鸿蒙 DSHM 移植）",
   "type": "module",
   "main": "./index.js",

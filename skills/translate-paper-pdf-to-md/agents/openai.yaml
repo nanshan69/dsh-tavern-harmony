@@ -1,0 +1,4 @@
+interface:
+  display_name: "Translate Paper PDF to MD"
+  short_description: "Translate English paper PDFs into Markdown"
+  default_prompt: "Use $translate-paper-pdf-to-md to translate this English academic PDF into a polished target-language Markdown document; ask me for the paper field and translation style preferences before translating."

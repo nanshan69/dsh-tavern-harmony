@@ -1,5 +1,26 @@
 # 更新日志
 
+## 1.1.3 — 2026-10-25
+
+**装插件顺带把技能带上**：仓库里新增 `skills/`，安装或升级后自动铺到
+`$DSH_HOME/skills/`，新设备不用再逐个手工装技能。
+
+- 新增 `skills/`（共 7 个技能，17 个文件）：
+  - `translate-paper-pdf-to-md`：英文文献 PDF → 中文 Markdown（自带 DSHM 版
+    纯 Python 抽取脚本，不依赖 poppler / ImageMagick / Pillow）；
+  - `academic-humanizer-en` / `academic-humanizer-zh`：学术写作润色；
+  - `ohos-pc` / `ohos-plugin-install` / `ohos-python` / `ohos-shell` / `ohos-workspace`
+    五篇鸿蒙运行环境说明。
+- 新增 `packages/dsh-tavern-gate/skills-sync.js`：内容相同不写盘；内容不同时
+  先把旧文件备份到 `$DSH_HOME/skills-backup/<时间戳>/` 再覆盖。只写同名文件，
+  **不删除**用户在 `$DSH_HOME/skills/` 下自己放的任何技能。
+  `ohos-*.md` 是运行环境事实，目标已存在时一律不覆盖（只补缺失）。
+- `dsh-tavern-gate/index.js`：每次启动校验一次（幂等，正常启动零写盘），
+  升级方式 B（覆盖 `packages/*`）后重启即带新技能。
+- 根 `index.js`（自举入口）：首次安装/重新贴链接时同步一次，链接安装也能带上技能。
+- `translate-paper-pdf-to-md` 新增 `scripts/render_pages_guest.sh`：Alpine guest
+  装好 `poppler-utils` 后可渲染页面位图，补上「矢量图无法抽取」的场景。
+
 ## 1.1.2 — 2026-10-23
 
 **修好「重新生成正文要等一分钟、最后还报错」**：显示同步（`synchronize`）在端侧

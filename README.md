@@ -22,6 +22,8 @@
   改卡工作台、候选行动、后台结算、`/compact` 压缩。
 - **中文文档 + 安装器 + 体检脚本**：`scripts/install.py`、`scripts/doctor.py`，
   幂等、干跑默认、自动备份。
+- **自带 Agent 技能**：仓库里的 `skills/` 会在安装/升级后铺到 `$DSH_HOME/skills/`
+  —— 文献翻译、学术润色两套、五篇鸿蒙环境说明，开箱即用（见下面「内置技能」）。
 
 ## 架构
 
@@ -57,6 +59,7 @@ DSH 插件模型本身的约束。
 | `packages/dsh-tavern-remote` | typert 远程信号服务（前端拿 `tavern-state` 更新用） |
 | `packages/dsh-tavern-presets` | 两个 agent preset（安装时按设备路径渲染） |
 | `vendor/dsh-dream-skin` | 内置的酒馆主题（MIT，不在 registry 稳定版本上） |
+| `skills/` | 随插件分发的 Agent 技能（安装后铺到 `$DSH_HOME/skills/`） |
 | `patches/` | 相对上游的全部改动（核心 / host lib / 前端 bundle） |
 | `scripts/install.py` | 安装器（幂等、默认干跑、自动备份） |
 | `scripts/uninstall.py` | 卸载器（默认保留数据） |
@@ -104,6 +107,29 @@ python3 scripts/doctor.py             # 体检
 ```bash
 python3 scripts/uninstall.py            # 干跑
 python3 scripts/uninstall.py --apply    # 摘掉代码与 profile 登记，保留人物卡/聊天
+```
+
+## 内置技能
+
+`skills/` 会由 `packages/dsh-tavern-gate/skills-sync.js` 在每次启动时同步到
+`$DSH_HOME/skills/`（幂等：内容相同不写盘；不同则先备份到
+`$DSH_HOME/skills-backup/<时间戳>/`，不删用户自己的技能）。
+
+| 技能 | 用途 |
+| --- | --- |
+| `translate-paper-pdf-to-md` | 英文文献 PDF → 目标语言 Markdown，保留图表/公式/引用；自带 DSHM 纯 Python 抽取脚本 |
+| `academic-humanizer-zh` | 中文学术写作去 AI 腔润色（论文/摘要/讨论/基金本子） |
+| `academic-humanizer-en` | 英文学术写作与基金申请的清晰度/语气润色 |
+| `ohos-python` / `ohos-shell` / `ohos-workspace` / `ohos-pc` / `ohos-plugin-install` | 鸿蒙端运行环境说明（Python、shell、工作区、PC 形态、插件安装通道） |
+
+`ohos-*` 是运行环境事实，随核心版本演进：如果目标文件已存在就**不覆盖**，
+仓库里的副本只在缺失时补一份。
+
+文献翻译技能的额外依赖只有 `pypdf`（纯 Python）。设备上让 Agent 执行一次即可：
+
+```python
+from pip._internal.cli.main import main
+main(["install", "pypdf"])
 ```
 
 ## 开关语义
@@ -157,7 +183,7 @@ dsh-better-sidebar@0.28.0      （侧栏，酒馆必需）
 
 | 项 | 值 |
 | --- | --- |
-| 本移植 | 1.1.0 |
+| 本移植 | 1.1.3 |
 | 上游 | flizzywine/dsh-tavern 3.0.1（`c7d4a118`） |
 | 目标 | DSHM 0.2.1-rc.2 / Node 24 · jitless / ArkWeb |
 | 许可 | AGPL-3.0-or-later（详见 [`NOTICE.md`](NOTICE.md)） |

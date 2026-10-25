@@ -9,6 +9,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url'
 import { registerHooks } from 'node:module'
 import { readdirSync, statSync, existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { syncBundledSkills } from './skills-sync.js'
 
 export const name = 'dsh-tavern-gate'
 // 只 inject 明确存在的服务；sessionPersistence/sessionQuery 用 ctx.get 可选取，
@@ -104,7 +105,29 @@ async function installSessionPatchAtBoot(ctx) {
   }
 }
 
+// ── 内置技能铺开 ──
+// 仓库根带一个 skills/；安装/升级后由这里铺到 <home>/skills，新设备不用手工装。
+// 幂等：内容相同不写盘；不同则先备份到 <home>/skills-backup/<时间戳>/。
+function syncSkillsAtBoot() {
+  try {
+    const source = join(PROFILE_DIR, 'node_modules', 'dsh-tavern-harmony', 'skills')
+    if (!existsSync(source)) return
+    const report = syncBundledSkills({
+      source,
+      target: join(HOME_DIR, 'skills'),
+      backupRoot: join(HOME_DIR, 'skills-backup'),
+      preserve: ['ohos-'],
+    })
+    if (report.copied > 0 || report.backed > 0) {
+      console.log('[tavern-gate] 已同步内置技能：' + JSON.stringify(report))
+    }
+  } catch (error) {
+    console.warn('[tavern-gate] 内置技能同步失败：' + String(error && error.message || error))
+  }
+}
+
 export async function apply(ctx) {
+  syncSkillsAtBoot()
   await installSessionPatchAtBoot(ctx)
   const webServer = ctx.get('webServer')
   if (webServer === undefined) {
