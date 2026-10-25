@@ -104,10 +104,13 @@ sh render_pages_guest.sh paper.pdf out_dir 120
 - `apk add poppler-utils font-dejavu` → 35 个包 / 约 60MB / 3–4 分钟，
   `pdftocairo 25.04.0`、`pdftotext`、`pdfinfo`、`pdfimages` 落在 `/usr/bin/`；
   **装完写进 `vm/rootfs.qcow2`，guest 重启后还在**（实测 qcow2 63MB → 105MB）。
-- 渲染：`pdftocairo -png -r 72 -f 1 -l 1` 出 612×792 PNG，版式/字体/字符都正确，
-  可直接看图核对。
-- 慢的地方：含大位图的页面（整页 1520×2239 的 Flate 图）在 1 vCPU 上 4 分钟
-  以上没渲完 —— 这种页别用 poppler，宿主侧抽取反而更快。
+- 渲染质量：`-r 72 -f 1 -l 1` 出 612×792 PNG；`-r 110 -f 3 -l 3`（整页矢量架构图
+  + 大位图）出 935×1210 PNG，矢量线条、箭头、公式符号、正文全部正确 —— 这类矢量图
+  宿主侧抽不出来，只能靠 poppler。
+- 渲染耗时（guest 单核 + 9p 共享目录，实测）：72dpi 文本页 **2 分 42 秒**；
+  110dpi 大图页 **6 分 29 秒**。都完成了，只是慢 —— 整页预览偶尔用可以，
+  批量渲染不现实，正文/位图图表继续走宿主侧抽取。
+- 反过来：`pdftotext`（纯文本）很快，只需要文字时不必渲染。
 - 操作提醒：guest 忙时 `bash` 工具的 QGA 通道会丢响应（命令其实跑完了、文件也
   生成了，但工具一直显示在运行）。长命令用
   `setsid ... >/tmp/x.log 2>&1 &`，然后轮询日志/文件，别死等工具返回。
