@@ -137,11 +137,11 @@ async function loadGate(ctx) {
 }
 
 
-/** 首次安装（以及重新贴链接）时把仓库 skills/ 铺到 <home>/skills。 */
+/** 首次安装（以及重新贴链接）时把 dsh-tavern-gate/skills/ 铺到 <home>/skills。 */
 function syncSkillsFromPackage() {
   try {
-    const source = join(PKG_ROOT, 'skills')
-    if (!existsSync(source)) { log('skills: 仓库里没有 skills/，跳过'); return }
+    const source = join(PKG_ROOT, 'packages', 'dsh-tavern-gate', 'skills')
+    if (!existsSync(source)) { log('skills: 仓库里没有 packages/dsh-tavern-gate/skills/，跳过'); return }
     const report = syncBundledSkills({
       source,
       target: join(HOME_DIR, 'skills'),

@@ -22,7 +22,7 @@
   改卡工作台、候选行动、后台结算、`/compact` 压缩。
 - **中文文档 + 安装器 + 体检脚本**：`scripts/install.py`、`scripts/doctor.py`，
   幂等、干跑默认、自动备份。
-- **自带 Agent 技能**：仓库里的 `skills/` 会在安装/升级后铺到 `$DSH_HOME/skills/`
+- **自带 Agent 技能**：`packages/dsh-tavern-gate/skills/` 会在安装/升级后铺到 `$DSH_HOME/skills/`
   —— 文献翻译、学术润色两套、五篇鸿蒙环境说明，开箱即用（见下面「内置技能」）。
 
 ## 架构
@@ -59,7 +59,7 @@ DSH 插件模型本身的约束。
 | `packages/dsh-tavern-remote` | typert 远程信号服务（前端拿 `tavern-state` 更新用） |
 | `packages/dsh-tavern-presets` | 两个 agent preset（安装时按设备路径渲染） |
 | `vendor/dsh-dream-skin` | 内置的酒馆主题（MIT，不在 registry 稳定版本上） |
-| `skills/` | 随插件分发的 Agent 技能（安装后铺到 `$DSH_HOME/skills/`） |
+| `packages/dsh-tavern-gate/skills/` | 随插件分发的 Agent 技能（安装后铺到 `$DSH_HOME/skills/`） |
 | `patches/` | 相对上游的全部改动（核心 / host lib / 前端 bundle） |
 | `scripts/install.py` | 安装器（幂等、默认干跑、自动备份） |
 | `scripts/uninstall.py` | 卸载器（默认保留数据） |
@@ -111,7 +111,7 @@ python3 scripts/uninstall.py --apply    # 摘掉代码与 profile 登记，保�
 
 ## 内置技能
 
-`skills/` 会由 `packages/dsh-tavern-gate/skills-sync.js` 在每次启动时同步到
+`packages/dsh-tavern-gate/skills/` 会由同目录的 `skills-sync.js` 在每次启动时同步到
 `$DSH_HOME/skills/`（幂等：内容相同不写盘；不同则先备份到
 `$DSH_HOME/skills-backup/<时间戳>/`，不删用户自己的技能）。
 

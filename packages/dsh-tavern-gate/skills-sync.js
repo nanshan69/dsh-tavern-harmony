@@ -1,4 +1,4 @@
-// skills-sync.js — 把仓库里的 skills/ 铺到 <dsh-home>/skills/
+// skills-sync.js — 把本包 skills/ 铺到 <dsh-home>/skills/
 //
 // 为什么需要它：新设备只贴一个仓库链接，装完插件就应当自带这些技能；
 // 升级时（方式 B 覆盖 packages/*，或重新贴链接）也要把新版本技能带过来。

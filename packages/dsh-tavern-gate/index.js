@@ -106,11 +106,14 @@ async function installSessionPatchAtBoot(ctx) {
 }
 
 // ── 内置技能铺开 ──
-// 仓库根带一个 skills/；安装/升级后由这里铺到 <home>/skills，新设备不用手工装。
+// 本包带一个 skills/；安装/升级后由这里铺到 <home>/skills，新设备不用手工装。
 // 幂等：内容相同不写盘；不同则先备份到 <home>/skills-backup/<时间戳>/。
 function syncSkillsAtBoot() {
   try {
-    const source = join(PROFILE_DIR, 'node_modules', 'dsh-tavern-harmony', 'skills')
+    // 技能放在本包（dsh-tavern-gate/skills）：自举铺包、方式 B 覆盖 packages/* 时
+    // 都会一起刷新，所以它是「永远存在且最新」的那一份。旧布局（根包 skills/）作兜底。
+    let source = join(PROFILE_DIR, 'node_modules', 'dsh-tavern-gate', 'skills')
+    if (!existsSync(source)) source = join(PROFILE_DIR, 'node_modules', 'dsh-tavern-harmony', 'skills')
     if (!existsSync(source)) return
     const report = syncBundledSkills({
       source,
