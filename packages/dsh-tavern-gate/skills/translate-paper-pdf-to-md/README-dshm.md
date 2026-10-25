@@ -99,9 +99,17 @@ sh render_pages_guest.sh paper.pdf out_dir 120
 
 产物：`out_dir/page-01.png …`、`out_dir/source_layout.txt`、`out_dir/pdfimages.txt`。
 
-已在本机实测：`poppler 25.04.0` + `pdftocairo / pdftotext / pdfinfo / pdfimages`
-安装成功并落在 guest 的 `/usr/bin/`（guest 磁盘 `/dev/root` 132G，占用 70M）。
+实测记录（本机 DSHM 手持档）：
 
-注意：guest 只有 **1 个 vCPU**，`apk add` 期间 `loadavg` 会冲到 5+，
-渲染大页面（例如整页 1520×2239 位图）会明显拖慢；只渲需要的那几页，或者干脆
-用宿主侧的纯 Python 抽取（位图图表本来就能无损抽出来）。
+- `apk add poppler-utils font-dejavu` → 35 个包 / 约 60MB / 3–4 分钟，
+  `pdftocairo 25.04.0`、`pdftotext`、`pdfinfo`、`pdfimages` 落在 `/usr/bin/`；
+  **装完写进 `vm/rootfs.qcow2`，guest 重启后还在**（实测 qcow2 63MB → 105MB）。
+- 渲染：`pdftocairo -png -r 72 -f 1 -l 1` 出 612×792 PNG，版式/字体/字符都正确，
+  可直接看图核对。
+- 慢的地方：含大位图的页面（整页 1520×2239 的 Flate 图）在 1 vCPU 上 4 分钟
+  以上没渲完 —— 这种页别用 poppler，宿主侧抽取反而更快。
+- 操作提醒：guest 忙时 `bash` 工具的 QGA 通道会丢响应（命令其实跑完了、文件也
+  生成了，但工具一直显示在运行）。长命令用
+  `setsid ... >/tmp/x.log 2>&1 &`，然后轮询日志/文件，别死等工具返回。
+
+结论：**矢量图/整页预览用 poppler，正文与位图图表优先用宿主侧纯 Python 抽取。**
