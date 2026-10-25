@@ -1,5 +1,26 @@
 # 更新日志
 
+## 1.1.4 — 2026-10-25
+
+**科研通用工具链也打包进来了**：把课题里**可复用的方法论与工具**抽成 5 个技能
+（涉及课题独特内容的部分——研究方案设计、进度、证据表结果、领域结论——全部留在
+课题自己的 `.dsh/skills/`，不进仓库、不进公用目录）。
+
+- 新增 `research-toolkit`：纯 Python 科研文档工具链（`md2docx` Markdown→DOCX、
+  `pptx` Markdown→PPTX、`docx_tools`/`pdf_tools` 读取检索、`xlsx_tools` CSV↔XLSX、
+  `figures` SVG 图表、`stats_tools` 样本量与统计核对、`pubmed` 检索/OA 全文/引文核对、
+  `deps` 依赖检查），带 `run_tool.py` 运行器，适配 DSHM 内嵌 CPython（无 subprocess、
+  file 模式只能进沙箱）。实测：`md2docx` 生成 docx 自检通过、`stats_tools samplesize`
+  结果正确、`deps check` 正常。
+- 新增 4 个方法论技能：`research-pubmed-search`（PICO/检索式/PRISMA-S/筛选/引文核对）、
+  `research-evidence-extraction`（证据卡字段/RoB 2/ROBINS-I/SYRCLE/AMSTAR 2/GRADE/合成）、
+  `research-paper-writing`（IMRaD/CONSORT/STROBE/PRISMA/SPIRIT/投稿/审稿回复/红线）、
+  `research-stats-plan`（样本量/SAP/伴发事件/多重性/解读纪律）。
+- 命名统一加 `research-` 前缀，与课题里同名技能（docx-toolkit / pubmed-search / …）
+  区分：课题内仍用带课题细节的版本，其他工作区/新设备用通用版，互不覆盖。
+- 工具脚本已做 DSHM 适配：去掉 `from __future__` 首行、`__file__` 改为运行器注入的
+  `DSH_TOOL_DIR`、去掉课题路径默认值（默认输出 `literature/`、`fulltext/` 等中性目录）。
+
 ## 1.1.3 — 2026-10-25
 
 **装插件顺带把技能带上**：`packages/dsh-tavern-gate/skills/` 里新增 7 个技能，安装或升级后自动铺到

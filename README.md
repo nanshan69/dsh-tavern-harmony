@@ -121,6 +121,11 @@ python3 scripts/uninstall.py --apply    # 摘掉代码与 profile 登记，保�
 | `academic-humanizer-zh` | 中文学术写作去 AI 腔润色（论文/摘要/讨论/基金本子） |
 | `academic-humanizer-en` | 英文学术写作与基金申请的清晰度/语气润色 |
 | `ohos-python` / `ohos-shell` / `ohos-workspace` / `ohos-pc` / `ohos-plugin-install` | 鸿蒙端运行环境说明（Python、shell、工作区、PC 形态、插件安装通道） |
+| `research-toolkit` | 科研文档工具链：Markdown→DOCX/PPTX、DOCX/PDF 读取、CSV↔XLSX、SVG 图表、样本量统计、PubMed 检索（纯 Python + 运行器） |
+| `research-pubmed-search` | 医学文献检索与全文获取：PICO、检索式、PRISMA-S 留痕、筛选、引文核对 |
+| `research-evidence-extraction` | 证据卡提取、RoB 2 / ROBINS-I / SYRCLE / AMSTAR 2、GRADE、证据表与合成 |
+| `research-paper-writing` | 论文写作与投稿：IMRaD、CONSORT/STROBE/PRISMA/SPIRIT、cover letter、审稿回复 |
+| `research-stats-plan` | 样本量/效能与 SAP：分析集、缺失与伴发事件、多重性、解读纪律 |
 
 `ohos-*` 是运行环境事实，随核心版本演进：如果目标文件已存在就**不覆盖**，
 仓库里的副本只在缺失时补一份。
@@ -183,7 +188,7 @@ dsh-better-sidebar@0.28.0      （侧栏，酒馆必需）
 
 | 项 | 值 |
 | --- | --- |
-| 本移植 | 1.1.3 |
+| 本移植 | 1.1.4 |
 | 上游 | flizzywine/dsh-tavern 3.0.1（`c7d4a118`） |
 | 目标 | DSHM 0.2.1-rc.2 / Node 24 · jitless / ArkWeb |
 | 许可 | AGPL-3.0-or-later（详见 [`NOTICE.md`](NOTICE.md)） |
