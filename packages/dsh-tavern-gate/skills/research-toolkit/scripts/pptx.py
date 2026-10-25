@@ -15,7 +15,7 @@ Deck DSL（推荐，控制力强）：
   ---
   title: 汇报标题
   subtitle: 副标题
-  author: 汇报人 / 导师
+  author: 汇报人
   date: 2026-10-21
   topic: 页脚左侧文字（默认取 title）
   accent: 1F3864
@@ -361,7 +361,7 @@ class Deck:
             _shape(5, "AccentBar", int(0.85 * EMU_IN), int(1.25 * EMU_IN), int(0.09 * EMU_IN),
                    int(0.62 * EMU_IN), "", fill=self.accent),
             _textbox(6, "Kicker", int(1.08 * EMU_IN), int(1.18 * EMU_IN), int(8 * EMU_IN),
-                     int(0.4 * EMU_IN), _para(m.get("kicker", "博士研究课题 · 临床研究"), 1200,
+                     int(0.4 * EMU_IN), _para(m.get("kicker", "临床研究"), 1200,
                                               LIGHT, line_pct=100000)),
             # 标题字号随长度自适应（中文长题目 40pt 会挤出 3 行）；底部对齐，紧贴副标题
             _textbox(7, "Title", int(0.85 * EMU_IN), int(1.75 * EMU_IN), int(10.6 * EMU_IN),

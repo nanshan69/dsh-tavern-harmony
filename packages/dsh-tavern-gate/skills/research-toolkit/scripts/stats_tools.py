@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """统计与样本量小工具（纯 Python，不依赖 numpy/scipy/R）。
 
-设计给本课题用：
+设计用于临床研究方案：
   · 样本量：ANCOVA 校正基线的两样本比较（方案第 7 节公式）、两样本、配对
   · 效能/最小可检出差值(MDE)/95%CI 半宽，可复算方案表 7.3
   · 描述统计、组间比较（t / Mann-Whitney）、ANCOVA（OLS）、相关

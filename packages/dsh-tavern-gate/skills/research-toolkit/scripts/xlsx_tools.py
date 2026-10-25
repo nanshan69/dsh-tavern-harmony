@@ -2,7 +2,7 @@
 """CSV ⇄ XLSX 互转与 Markdown 表格导出（依赖 openpyxl，纯 Python 包）。
 
 用法：
-  python scripts/xlsx_tools.py csv2xlsx evidence/证据表初稿.csv --out evidence/证据表初稿.xlsx
+  python scripts/xlsx_tools.py csv2xlsx evidence/evidence.csv --out evidence/evidence.xlsx
   python scripts/xlsx_tools.py csv2xlsx a.csv b.csv --out 合集.xlsx        # 每个 CSV 一个 sheet
   python scripts/xlsx_tools.py xlsx2csv 输入.xlsx --out 导出.csv [--sheet Sheet1]
   python scripts/xlsx_tools.py xlsx2md  输入.xlsx [--sheet Sheet1]         # 打印 Markdown 表格

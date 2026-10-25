@@ -5,11 +5,11 @@
 
   python scripts/pubmed.py search --query '"photobiomodulation"[tiab] AND osteoporosis[tiab]' --retmax 50
   python scripts/pubmed.py search --query '...' --years 2018-2026 --out literature/检索结果_新.csv
-  python scripts/pubmed.py fetch  --pmids 42080480,42819314 --out literature/关键文献.json
-  python scripts/pubmed.py oa     --pmid 42080480 --outdir fulltext
+  python scripts/pubmed.py fetch  --pmids 12345678,23456789 --out literature/关键文献.json
+  python scripts/pubmed.py oa     --pmid 12345678 --outdir fulltext
   python scripts/pubmed.py ctgov  --query "photobiomodulation osteoporosis" --out literature/注册试验.csv
   python scripts/pubmed.py verify --file docs/方案.md
-  python scripts/pubmed.py cite   --pmids 42080480,42880535
+  python scripts/pubmed.py cite   --pmids 12345678,34567890
 
 环境变量（可选）：
   NCBI_API_KEY     NCBI 密钥，限速从 3 次/秒提高到 10 次/秒
