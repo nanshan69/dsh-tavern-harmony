@@ -1224,7 +1224,12 @@ def main(argv=None) -> int:
     out = resolve_path(args.out) if args.out else src.with_suffix(".pptx")
     template = None
     if not args.no_template:
-        template = resolve_path(args.template) if args.template else os.path.join(os.environ.get("DSH_TOOL_DIR") or ".", "_pptx_template.pptx")
+        # 底包路径一律走 resolve_path 归一成 Path；直接 os.path.join 得到的是 str，
+        # 下一行 template.is_file() 会 AttributeError（2026-10-26 修）。
+        template = resolve_path(
+            args.template
+            or os.path.join(os.environ.get("DSH_TOOL_DIR") or ".", "_pptx_template.pptx")
+        )
         if not template.is_file():
             print(f"[提示] 未找到底包 {template}，改用纯生成模式（兼容性风险较高）")
             template = None
