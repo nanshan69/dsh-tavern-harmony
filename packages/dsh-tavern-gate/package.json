@@ -1,7 +1,8 @@
 {
   "name": "dsh-tavern-gate",
-  "version": "0.1.2",
-  "description": "DSH Tavern 的开关：默认关闭，运行时加载/卸载酒馆本体（鸿蒙 DSHM 移植）",
+  "version": "0.2.0",
+  "description": "DSHM 酒馆开关：运行时加载/卸载酒馆本体，附带核心包解析钩子、会话补丁与技能同步",
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "main": "./index.js",
   "exports": {
@@ -9,6 +10,26 @@
     "./client": "./client.js",
     "./tavern-host-entry": "./tavern-host-entry.js",
     "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "skills-sync.js",
+    "tavern-host-entry.js",
+    "cordis.patch.yml",
+    "package.json",
+    "README.md",
+    "skills"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "dshm",
+    "openharmony",
+    "tavern"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
   },
   "dsh": {
     "bundle": {
@@ -18,25 +39,6 @@
       "platform": "web",
       "inject": []
     }
-  },
-  "files": [
-    "index.js",
-    "client.js",
-    "tavern-host-entry.js",
-    "cordis.patch.yml",
-    "package.json",
-    "README.md"
-  ],
-  "keywords": [
-    "dsh",
-    "dsh-plugin",
-    "dshm",
-    "openharmony",
-    "tavern"
-  ],
-  "license": "AGPL-3.0-or-later",
-  "engines": {
-    "node": ">=22.19.0"
   },
   "repository": {
     "type": "git",
